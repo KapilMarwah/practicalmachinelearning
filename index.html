@@ -11,7 +11,7 @@
 
 <meta name="author" content="Kapil Marwah" />
 
-<meta name="date" content="2019-08-10" />
+<meta name="date" content="2019-08-11" />
 
 <title>Practical Machine Learning Course Project</title>
 
@@ -192,29 +192,481 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Practical Machine Learning Course Project</h1>
 <h4 class="author">Kapil Marwah</h4>
-<h4 class="date">August 10, 2019</h4>
+<h4 class="date">August 11, 2019</h4>
 
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<div id="load-important-libraries-and-read-the-training-data" class="section level2">
+<h2>Load important libraries and read the training data</h2>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Warning: package 'caret' was built under R version 3.5.3</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre><code>## Warning: package 'ggplot2' was built under R version 3.5.2</code></pre>
+<pre class="r"><code>trainingRead &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;, stringsAsFactors = FALSE)
+trainingRead$classe &lt;- as.factor(trainingRead$classe)
+head(trainingRead)</code></pre>
+<pre><code>##   X user_name raw_timestamp_part_1 raw_timestamp_part_2   cvtd_timestamp
+## 1 1  carlitos           1323084231               788290 05/12/2011 11:23
+## 2 2  carlitos           1323084231               808298 05/12/2011 11:23
+## 3 3  carlitos           1323084231               820366 05/12/2011 11:23
+## 4 4  carlitos           1323084232               120339 05/12/2011 11:23
+## 5 5  carlitos           1323084232               196328 05/12/2011 11:23
+## 6 6  carlitos           1323084232               304277 05/12/2011 11:23
+##   new_window num_window roll_belt pitch_belt yaw_belt total_accel_belt
+## 1         no         11      1.41       8.07    -94.4                3
+## 2         no         11      1.41       8.07    -94.4                3
+## 3         no         11      1.42       8.07    -94.4                3
+## 4         no         12      1.48       8.05    -94.4                3
+## 5         no         12      1.48       8.07    -94.4                3
+## 6         no         12      1.45       8.06    -94.4                3
+##   kurtosis_roll_belt kurtosis_picth_belt kurtosis_yaw_belt
+## 1                                                         
+## 2                                                         
+## 3                                                         
+## 4                                                         
+## 5                                                         
+## 6                                                         
+##   skewness_roll_belt skewness_roll_belt.1 skewness_yaw_belt max_roll_belt
+## 1                                                                      NA
+## 2                                                                      NA
+## 3                                                                      NA
+## 4                                                                      NA
+## 5                                                                      NA
+## 6                                                                      NA
+##   max_picth_belt max_yaw_belt min_roll_belt min_pitch_belt min_yaw_belt
+## 1             NA                         NA             NA             
+## 2             NA                         NA             NA             
+## 3             NA                         NA             NA             
+## 4             NA                         NA             NA             
+## 5             NA                         NA             NA             
+## 6             NA                         NA             NA             
+##   amplitude_roll_belt amplitude_pitch_belt amplitude_yaw_belt
+## 1                  NA                   NA                   
+## 2                  NA                   NA                   
+## 3                  NA                   NA                   
+## 4                  NA                   NA                   
+## 5                  NA                   NA                   
+## 6                  NA                   NA                   
+##   var_total_accel_belt avg_roll_belt stddev_roll_belt var_roll_belt
+## 1                   NA            NA               NA            NA
+## 2                   NA            NA               NA            NA
+## 3                   NA            NA               NA            NA
+## 4                   NA            NA               NA            NA
+## 5                   NA            NA               NA            NA
+## 6                   NA            NA               NA            NA
+##   avg_pitch_belt stddev_pitch_belt var_pitch_belt avg_yaw_belt
+## 1             NA                NA             NA           NA
+## 2             NA                NA             NA           NA
+## 3             NA                NA             NA           NA
+## 4             NA                NA             NA           NA
+## 5             NA                NA             NA           NA
+## 6             NA                NA             NA           NA
+##   stddev_yaw_belt var_yaw_belt gyros_belt_x gyros_belt_y gyros_belt_z
+## 1              NA           NA         0.00         0.00        -0.02
+## 2              NA           NA         0.02         0.00        -0.02
+## 3              NA           NA         0.00         0.00        -0.02
+## 4              NA           NA         0.02         0.00        -0.03
+## 5              NA           NA         0.02         0.02        -0.02
+## 6              NA           NA         0.02         0.00        -0.02
+##   accel_belt_x accel_belt_y accel_belt_z magnet_belt_x magnet_belt_y
+## 1          -21            4           22            -3           599
+## 2          -22            4           22            -7           608
+## 3          -20            5           23            -2           600
+## 4          -22            3           21            -6           604
+## 5          -21            2           24            -6           600
+## 6          -21            4           21             0           603
+##   magnet_belt_z roll_arm pitch_arm yaw_arm total_accel_arm var_accel_arm
+## 1          -313     -128      22.5    -161              34            NA
+## 2          -311     -128      22.5    -161              34            NA
+## 3          -305     -128      22.5    -161              34            NA
+## 4          -310     -128      22.1    -161              34            NA
+## 5          -302     -128      22.1    -161              34            NA
+## 6          -312     -128      22.0    -161              34            NA
+##   avg_roll_arm stddev_roll_arm var_roll_arm avg_pitch_arm stddev_pitch_arm
+## 1           NA              NA           NA            NA               NA
+## 2           NA              NA           NA            NA               NA
+## 3           NA              NA           NA            NA               NA
+## 4           NA              NA           NA            NA               NA
+## 5           NA              NA           NA            NA               NA
+## 6           NA              NA           NA            NA               NA
+##   var_pitch_arm avg_yaw_arm stddev_yaw_arm var_yaw_arm gyros_arm_x
+## 1            NA          NA             NA          NA        0.00
+## 2            NA          NA             NA          NA        0.02
+## 3            NA          NA             NA          NA        0.02
+## 4            NA          NA             NA          NA        0.02
+## 5            NA          NA             NA          NA        0.00
+## 6            NA          NA             NA          NA        0.02
+##   gyros_arm_y gyros_arm_z accel_arm_x accel_arm_y accel_arm_z magnet_arm_x
+## 1        0.00       -0.02        -288         109        -123         -368
+## 2       -0.02       -0.02        -290         110        -125         -369
+## 3       -0.02       -0.02        -289         110        -126         -368
+## 4       -0.03        0.02        -289         111        -123         -372
+## 5       -0.03        0.00        -289         111        -123         -374
+## 6       -0.03        0.00        -289         111        -122         -369
+##   magnet_arm_y magnet_arm_z kurtosis_roll_arm kurtosis_picth_arm
+## 1          337          516                                     
+## 2          337          513                                     
+## 3          344          513                                     
+## 4          344          512                                     
+## 5          337          506                                     
+## 6          342          513                                     
+##   kurtosis_yaw_arm skewness_roll_arm skewness_pitch_arm skewness_yaw_arm
+## 1                                                                       
+## 2                                                                       
+## 3                                                                       
+## 4                                                                       
+## 5                                                                       
+## 6                                                                       
+##   max_roll_arm max_picth_arm max_yaw_arm min_roll_arm min_pitch_arm
+## 1           NA            NA          NA           NA            NA
+## 2           NA            NA          NA           NA            NA
+## 3           NA            NA          NA           NA            NA
+## 4           NA            NA          NA           NA            NA
+## 5           NA            NA          NA           NA            NA
+## 6           NA            NA          NA           NA            NA
+##   min_yaw_arm amplitude_roll_arm amplitude_pitch_arm amplitude_yaw_arm
+## 1          NA                 NA                  NA                NA
+## 2          NA                 NA                  NA                NA
+## 3          NA                 NA                  NA                NA
+## 4          NA                 NA                  NA                NA
+## 5          NA                 NA                  NA                NA
+## 6          NA                 NA                  NA                NA
+##   roll_dumbbell pitch_dumbbell yaw_dumbbell kurtosis_roll_dumbbell
+## 1      13.05217      -70.49400    -84.87394                       
+## 2      13.13074      -70.63751    -84.71065                       
+## 3      12.85075      -70.27812    -85.14078                       
+## 4      13.43120      -70.39379    -84.87363                       
+## 5      13.37872      -70.42856    -84.85306                       
+## 6      13.38246      -70.81759    -84.46500                       
+##   kurtosis_picth_dumbbell kurtosis_yaw_dumbbell skewness_roll_dumbbell
+## 1                                                                     
+## 2                                                                     
+## 3                                                                     
+## 4                                                                     
+## 5                                                                     
+## 6                                                                     
+##   skewness_pitch_dumbbell skewness_yaw_dumbbell max_roll_dumbbell
+## 1                                                              NA
+## 2                                                              NA
+## 3                                                              NA
+## 4                                                              NA
+## 5                                                              NA
+## 6                                                              NA
+##   max_picth_dumbbell max_yaw_dumbbell min_roll_dumbbell min_pitch_dumbbell
+## 1                 NA                                 NA                 NA
+## 2                 NA                                 NA                 NA
+## 3                 NA                                 NA                 NA
+## 4                 NA                                 NA                 NA
+## 5                 NA                                 NA                 NA
+## 6                 NA                                 NA                 NA
+##   min_yaw_dumbbell amplitude_roll_dumbbell amplitude_pitch_dumbbell
+## 1                                       NA                       NA
+## 2                                       NA                       NA
+## 3                                       NA                       NA
+## 4                                       NA                       NA
+## 5                                       NA                       NA
+## 6                                       NA                       NA
+##   amplitude_yaw_dumbbell total_accel_dumbbell var_accel_dumbbell
+## 1                                          37                 NA
+## 2                                          37                 NA
+## 3                                          37                 NA
+## 4                                          37                 NA
+## 5                                          37                 NA
+## 6                                          37                 NA
+##   avg_roll_dumbbell stddev_roll_dumbbell var_roll_dumbbell
+## 1                NA                   NA                NA
+## 2                NA                   NA                NA
+## 3                NA                   NA                NA
+## 4                NA                   NA                NA
+## 5                NA                   NA                NA
+## 6                NA                   NA                NA
+##   avg_pitch_dumbbell stddev_pitch_dumbbell var_pitch_dumbbell
+## 1                 NA                    NA                 NA
+## 2                 NA                    NA                 NA
+## 3                 NA                    NA                 NA
+## 4                 NA                    NA                 NA
+## 5                 NA                    NA                 NA
+## 6                 NA                    NA                 NA
+##   avg_yaw_dumbbell stddev_yaw_dumbbell var_yaw_dumbbell gyros_dumbbell_x
+## 1               NA                  NA               NA                0
+## 2               NA                  NA               NA                0
+## 3               NA                  NA               NA                0
+## 4               NA                  NA               NA                0
+## 5               NA                  NA               NA                0
+## 6               NA                  NA               NA                0
+##   gyros_dumbbell_y gyros_dumbbell_z accel_dumbbell_x accel_dumbbell_y
+## 1            -0.02             0.00             -234               47
+## 2            -0.02             0.00             -233               47
+## 3            -0.02             0.00             -232               46
+## 4            -0.02            -0.02             -232               48
+## 5            -0.02             0.00             -233               48
+## 6            -0.02             0.00             -234               48
+##   accel_dumbbell_z magnet_dumbbell_x magnet_dumbbell_y magnet_dumbbell_z
+## 1             -271              -559               293               -65
+## 2             -269              -555               296               -64
+## 3             -270              -561               298               -63
+## 4             -269              -552               303               -60
+## 5             -270              -554               292               -68
+## 6             -269              -558               294               -66
+##   roll_forearm pitch_forearm yaw_forearm kurtosis_roll_forearm
+## 1         28.4         -63.9        -153                      
+## 2         28.3         -63.9        -153                      
+## 3         28.3         -63.9        -152                      
+## 4         28.1         -63.9        -152                      
+## 5         28.0         -63.9        -152                      
+## 6         27.9         -63.9        -152                      
+##   kurtosis_picth_forearm kurtosis_yaw_forearm skewness_roll_forearm
+## 1                                                                  
+## 2                                                                  
+## 3                                                                  
+## 4                                                                  
+## 5                                                                  
+## 6                                                                  
+##   skewness_pitch_forearm skewness_yaw_forearm max_roll_forearm
+## 1                                                           NA
+## 2                                                           NA
+## 3                                                           NA
+## 4                                                           NA
+## 5                                                           NA
+## 6                                                           NA
+##   max_picth_forearm max_yaw_forearm min_roll_forearm min_pitch_forearm
+## 1                NA                               NA                NA
+## 2                NA                               NA                NA
+## 3                NA                               NA                NA
+## 4                NA                               NA                NA
+## 5                NA                               NA                NA
+## 6                NA                               NA                NA
+##   min_yaw_forearm amplitude_roll_forearm amplitude_pitch_forearm
+## 1                                     NA                      NA
+## 2                                     NA                      NA
+## 3                                     NA                      NA
+## 4                                     NA                      NA
+## 5                                     NA                      NA
+## 6                                     NA                      NA
+##   amplitude_yaw_forearm total_accel_forearm var_accel_forearm
+## 1                                        36                NA
+## 2                                        36                NA
+## 3                                        36                NA
+## 4                                        36                NA
+## 5                                        36                NA
+## 6                                        36                NA
+##   avg_roll_forearm stddev_roll_forearm var_roll_forearm avg_pitch_forearm
+## 1               NA                  NA               NA                NA
+## 2               NA                  NA               NA                NA
+## 3               NA                  NA               NA                NA
+## 4               NA                  NA               NA                NA
+## 5               NA                  NA               NA                NA
+## 6               NA                  NA               NA                NA
+##   stddev_pitch_forearm var_pitch_forearm avg_yaw_forearm
+## 1                   NA                NA              NA
+## 2                   NA                NA              NA
+## 3                   NA                NA              NA
+## 4                   NA                NA              NA
+## 5                   NA                NA              NA
+## 6                   NA                NA              NA
+##   stddev_yaw_forearm var_yaw_forearm gyros_forearm_x gyros_forearm_y
+## 1                 NA              NA            0.03            0.00
+## 2                 NA              NA            0.02            0.00
+## 3                 NA              NA            0.03           -0.02
+## 4                 NA              NA            0.02           -0.02
+## 5                 NA              NA            0.02            0.00
+## 6                 NA              NA            0.02           -0.02
+##   gyros_forearm_z accel_forearm_x accel_forearm_y accel_forearm_z
+## 1           -0.02             192             203            -215
+## 2           -0.02             192             203            -216
+## 3            0.00             196             204            -213
+## 4            0.00             189             206            -214
+## 5           -0.02             189             206            -214
+## 6           -0.03             193             203            -215
+##   magnet_forearm_x magnet_forearm_y magnet_forearm_z classe
+## 1              -17              654              476      A
+## 2              -18              661              473      A
+## 3              -18              658              469      A
+## 4              -16              658              469      A
+## 5              -17              655              473      A
+## 6               -9              660              478      A</code></pre>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="data:image/png;base64,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" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<p>Remove the columns having only NA values</p>
+<pre class="r"><code>training_withoutna &lt;- trainingRead[,(colSums(is.na(trainingRead)) == 0)]
+dim(training_withoutna)</code></pre>
+<pre><code>## [1] 19622    93</code></pre>
+<p>Remove near Zero variance columns and first five columns which are not relevant for prediction</p>
+<pre class="r"><code>training_cleaned &lt;- training_withoutna[,-nearZeroVar(training_withoutna)]
+training_cleaned &lt;- training_cleaned[,-c(1:5)]
+dim(training_cleaned)</code></pre>
+<pre><code>## [1] 19622    54</code></pre>
+<pre class="r"><code>head(training_cleaned)</code></pre>
+<pre><code>##   num_window roll_belt pitch_belt yaw_belt total_accel_belt gyros_belt_x
+## 1         11      1.41       8.07    -94.4                3         0.00
+## 2         11      1.41       8.07    -94.4                3         0.02
+## 3         11      1.42       8.07    -94.4                3         0.00
+## 4         12      1.48       8.05    -94.4                3         0.02
+## 5         12      1.48       8.07    -94.4                3         0.02
+## 6         12      1.45       8.06    -94.4                3         0.02
+##   gyros_belt_y gyros_belt_z accel_belt_x accel_belt_y accel_belt_z
+## 1         0.00        -0.02          -21            4           22
+## 2         0.00        -0.02          -22            4           22
+## 3         0.00        -0.02          -20            5           23
+## 4         0.00        -0.03          -22            3           21
+## 5         0.02        -0.02          -21            2           24
+## 6         0.00        -0.02          -21            4           21
+##   magnet_belt_x magnet_belt_y magnet_belt_z roll_arm pitch_arm yaw_arm
+## 1            -3           599          -313     -128      22.5    -161
+## 2            -7           608          -311     -128      22.5    -161
+## 3            -2           600          -305     -128      22.5    -161
+## 4            -6           604          -310     -128      22.1    -161
+## 5            -6           600          -302     -128      22.1    -161
+## 6             0           603          -312     -128      22.0    -161
+##   total_accel_arm gyros_arm_x gyros_arm_y gyros_arm_z accel_arm_x
+## 1              34        0.00        0.00       -0.02        -288
+## 2              34        0.02       -0.02       -0.02        -290
+## 3              34        0.02       -0.02       -0.02        -289
+## 4              34        0.02       -0.03        0.02        -289
+## 5              34        0.00       -0.03        0.00        -289
+## 6              34        0.02       -0.03        0.00        -289
+##   accel_arm_y accel_arm_z magnet_arm_x magnet_arm_y magnet_arm_z
+## 1         109        -123         -368          337          516
+## 2         110        -125         -369          337          513
+## 3         110        -126         -368          344          513
+## 4         111        -123         -372          344          512
+## 5         111        -123         -374          337          506
+## 6         111        -122         -369          342          513
+##   roll_dumbbell pitch_dumbbell yaw_dumbbell total_accel_dumbbell
+## 1      13.05217      -70.49400    -84.87394                   37
+## 2      13.13074      -70.63751    -84.71065                   37
+## 3      12.85075      -70.27812    -85.14078                   37
+## 4      13.43120      -70.39379    -84.87363                   37
+## 5      13.37872      -70.42856    -84.85306                   37
+## 6      13.38246      -70.81759    -84.46500                   37
+##   gyros_dumbbell_x gyros_dumbbell_y gyros_dumbbell_z accel_dumbbell_x
+## 1                0            -0.02             0.00             -234
+## 2                0            -0.02             0.00             -233
+## 3                0            -0.02             0.00             -232
+## 4                0            -0.02            -0.02             -232
+## 5                0            -0.02             0.00             -233
+## 6                0            -0.02             0.00             -234
+##   accel_dumbbell_y accel_dumbbell_z magnet_dumbbell_x magnet_dumbbell_y
+## 1               47             -271              -559               293
+## 2               47             -269              -555               296
+## 3               46             -270              -561               298
+## 4               48             -269              -552               303
+## 5               48             -270              -554               292
+## 6               48             -269              -558               294
+##   magnet_dumbbell_z roll_forearm pitch_forearm yaw_forearm
+## 1               -65         28.4         -63.9        -153
+## 2               -64         28.3         -63.9        -153
+## 3               -63         28.3         -63.9        -152
+## 4               -60         28.1         -63.9        -152
+## 5               -68         28.0         -63.9        -152
+## 6               -66         27.9         -63.9        -152
+##   total_accel_forearm gyros_forearm_x gyros_forearm_y gyros_forearm_z
+## 1                  36            0.03            0.00           -0.02
+## 2                  36            0.02            0.00           -0.02
+## 3                  36            0.03           -0.02            0.00
+## 4                  36            0.02           -0.02            0.00
+## 5                  36            0.02            0.00           -0.02
+## 6                  36            0.02           -0.02           -0.03
+##   accel_forearm_x accel_forearm_y accel_forearm_z magnet_forearm_x
+## 1             192             203            -215              -17
+## 2             192             203            -216              -18
+## 3             196             204            -213              -18
+## 4             189             206            -214              -16
+## 5             189             206            -214              -17
+## 6             193             203            -215               -9
+##   magnet_forearm_y magnet_forearm_z classe
+## 1              654              476      A
+## 2              661              473      A
+## 3              658              469      A
+## 4              658              469      A
+## 5              655              473      A
+## 6              660              478      A</code></pre>
+</div>
+<div id="training-and-dummy-test-data-partition" class="section level2">
+<h2>Training and Dummy test data partition</h2>
+<p>Create training and dummy testing data set out of given training data set</p>
+<p>Training dimensions</p>
+<pre><code>## [1] 14718    54</code></pre>
+<p>Dummy testing data dimensions</p>
+<pre><code>## [1] 4904   54</code></pre>
+<p>Cleaned data’s dimensions</p>
+<pre><code>## [1] 19622    54</code></pre>
+</div>
+<div id="data-train" class="section level2">
+<h2>Data Train</h2>
+<p>We would be using random forest model to train our training dataset as it has high accuracy. If requisite accuracy is not achieved then would move to next suitable method like KNN, gbm etc or a combination.</p>
+<p>Do parallel processing as Random forest method would be resource heavy</p>
+<pre><code>## Warning: package 'doParallel' was built under R version 3.5.3</code></pre>
+<pre><code>## Loading required package: foreach</code></pre>
+<pre><code>## Warning: package 'foreach' was built under R version 3.5.2</code></pre>
+<pre><code>## Loading required package: iterators</code></pre>
+<pre><code>## Warning: package 'iterators' was built under R version 3.5.2</code></pre>
+<p>Use 2 K-folds for cross validation</p>
+<p>Train the data using random forest model and plot</p>
+<pre><code>## 
+## Call:
+##  randomForest(x = x, y = y, mtry = param$mtry, tryControl = ..1) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 27
+## 
+##         OOB estimate of  error rate: 0.18%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 4183    1    0    0    1 0.0004778973
+## B    6 2839    3    0    0 0.0031601124
+## C    0    5 2562    0    0 0.0019477990
+## D    0    0    5 2407    0 0.0020729685
+## E    0    1    0    4 2701 0.0018477458</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /> Predict on dummy test data</p>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1395    0    0    0    0
+##          B    2  947    0    0    0
+##          C    0    1  854    0    0
+##          D    0    0    4  800    0
+##          E    0    0    0    3  898
+## 
+## Overall Statistics
+##                                          
+##                Accuracy : 0.998          
+##                  95% CI : (0.9963, 0.999)
+##     No Information Rate : 0.2849         
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
+##                                          
+##                   Kappa : 0.9974         
+##                                          
+##  Mcnemar's Test P-Value : NA             
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9986   0.9989   0.9953   0.9963   1.0000
+## Specificity            1.0000   0.9995   0.9998   0.9990   0.9993
+## Pos Pred Value         1.0000   0.9979   0.9988   0.9950   0.9967
+## Neg Pred Value         0.9994   0.9997   0.9990   0.9993   1.0000
+## Prevalence             0.2849   0.1933   0.1750   0.1637   0.1831
+## Detection Rate         0.2845   0.1931   0.1741   0.1631   0.1831
+## Detection Prevalence   0.2845   0.1935   0.1743   0.1639   0.1837
+## Balanced Accuracy      0.9993   0.9992   0.9975   0.9976   0.9996</code></pre>
+<p>Thus the accuracy of our model is 99.76% and out of sample error is .24% which is good.</p>
+</div>
+<div id="prediction-on-real-test-data" class="section level2">
+<h2>Prediction on real test data</h2>
+<p>Read the real test data</p>
+<pre class="r"><code>realtesting &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;, stringsAsFactors = FALSE)
+dim(realtesting)</code></pre>
+<pre><code>## [1]  20 160</code></pre>
+<p>Pick columns as per previously cleaned training data and predict accordingly</p>
+<pre><code>## [1] 20 53</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
+<p>This prediction would help in answering the 20 cases quiz.</p>
 </div>
 
 

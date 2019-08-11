@@ -1,9 +1,11 @@
 ---
 title: "Practical Machine Learning Course Project"
 author: "Kapil Marwah"
-date: "August 10, 2019"
+date: "August 11, 2019"
 output: html_document
+Project Description: Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, our goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. 
 Data Source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
+
 ---
 
 ```{r setup, include=FALSE}
@@ -12,24 +14,102 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##Load important libraries and read the training data
 
-```{r training, echo = FALSE}
+```{r, cache = T, echo = TRUE}
 library(caret)
-trainingRead <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
+trainingRead <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", stringsAsFactors = FALSE)
+trainingRead$classe <- as.factor(trainingRead$classe)
 head(trainingRead)
 ```
 ##Data Cleaning 
+
  Remove the columns having only NA values
 
-```{r cleaning, echo=FALSE}
+```{r, cache = T, echo=TRUE}
 training_withoutna <- trainingRead[,(colSums(is.na(trainingRead)) == 0)]
 dim(training_withoutna)
-head(training_withoutna)
-```
-##Remove near Zero variance columns
-```{r zerovar, echo=FALSE}
-training_nonzerovariance <- training_withoutna[,-nearZeroVar(training_withoutna)]
-dim(training_nonzerovariance)
-head(training_nonzerovariance)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+ Remove near Zero variance columns and first five columns which are not relevant for prediction
+```{r, cache = T, echo=TRUE}
+training_cleaned <- training_withoutna[,-nearZeroVar(training_withoutna)]
+training_cleaned <- training_cleaned[,-c(1:5)]
+dim(training_cleaned)
+head(training_cleaned)
+```
+
+##Training and Dummy test data partition 
+
+ Create training and dummy testing data set out of given training data set
+
+```{r, cache = T, echo=FALSE}
+set.seed(1234567)
+
+inTrain <- createDataPartition(training_cleaned$classe, p= 3/4)[[1]]
+training <- training_cleaned[inTrain,]
+testing <- training_cleaned[-inTrain,]
+```
+ Training dimensions
+```{r, cache = T, echo=FALSE}
+dim(training)
+```
+ Dummy testing data dimensions
+```{r, cache = T, echo=FALSE}
+dim(testing)
+```
+ Cleaned data's dimensions
+```{r, cache = T, echo=FALSE}
+dim(training_cleaned)
+```
+
+## Data Train
+
+ We would be using random forest model to train our training dataset as it has high accuracy. If requisite 
+ accuracy is not achieved then would move to next suitable method like KNN, gbm etc or a combination.
+ 
+ Do parallel processing as Random forest method would be resource heavy
+ 
+```{r, cache = T, echo=FALSE}
+library(parallel)
+library(doParallel)
+cluster <- makeCluster(detectCores() - 1)
+registerDoParallel(cluster)
+```
+
+Use 2 K-folds for cross validation
+```{r, cache = T, echo=FALSE}
+fitControl_rf <- trainControl(method = "cv",number = 2, allowParallel = TRUE)
+```
+ Train the data using random forest model and plot
+
+```{r, cache = T, echo=FALSE}
+trained_data_rf <- train(classe ~., data = training, method = "rf", tryControl = fitControl_rf)
+trained_data_rf$finalModel
+plot(trained_data_rf)
+stopCluster(cluster)
+registerDoSEQ()
+```
+ Predict on dummy test data
+```{r, cache = T, echo=FALSE}
+tested_data <- predict(trained_data_rf, newdata = testing)
+matrix_model <- confusionMatrix( as.factor(testing$classe), tested_data)
+matrix_model
+```
+Thus the accuracy of our model is 99.76% and out of sample error is .24% which is good.
+
+## Prediction on real test data
+ Read the real test data
+ 
+```{r, cache = T, echo=TRUE}
+realtesting <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", stringsAsFactors = FALSE)
+dim(realtesting)
+```
+
+Pick columns as per previously cleaned training data and predict accordingly 
+```{r, cache = T, echo=FALSE}
+realtesting <- realtesting[,names(realtesting) %in% names(training)]
+dim(realtesting)
+realtested_data <- predict(trained_data_rf, newdata = realtesting)
+realtested_data 
+```
+
+This prediction would help in answering the 20 cases quiz.
